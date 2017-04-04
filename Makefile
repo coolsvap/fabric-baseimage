@@ -1,4 +1,4 @@
-DOCKER_NS ?= hyperledger
+DOCKER_NS ?= coolsvap
 BASENAME ?= $(DOCKER_NS)/fabric
 NAME ?= $(BASENAME)-baseimage
 VERSION ?= $(shell cat ./release)
