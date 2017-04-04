@@ -30,5 +30,5 @@ if [ $ARCH = s390x -o $ARCH = ppc64le ]; then
     /tmp/ibm-java.bin -i silent -f /tmp/response.properties
     ln -s /opt/ibm/java/jre/bin/* /usr/local/bin/
 else
-    apt-get update && apt-get install openjdk-8-jdk -y
+    yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
 fi
