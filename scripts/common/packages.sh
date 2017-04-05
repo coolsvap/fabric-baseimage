@@ -1,4 +1,4 @@
 #!/bin/bash
 
-apt-get update -qq
-apt-get -y install software-properties-common curl sudo
+yum update -y
+yum -y install curl sudo

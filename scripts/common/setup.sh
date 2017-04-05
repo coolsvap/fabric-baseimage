@@ -10,13 +10,14 @@ set -e
 set -x
 
 # Update the entire system to the latest releases
-apt-get update -qq
-apt-get dist-upgrade -qqy
+yum update -y
 
 # install common tools
-COMMON_TOOLS="git net-tools netcat-openbsd autoconf automake libtool curl make g++ unzip build-essential"
+#COMMON_TOOLS="git net-tools netcat-openbsd autoconf automake libtool curl make g++ unzip build-essential"
+COMMON_TOOLS="git net-tools nmap-ncat autoconf automake libtool curl make unzip gcc gcc-c++ make openssl-devel"
 #apt-get install -y git net-tools netcat-openbsd
-apt-get install -y $COMMON_TOOLS
+#apt-get install -y $COMMON_TOOLS
+yum install -y $COMMON_TOOLS
 
 # Set Go environment variables needed by other scripts
 export GOPATH="/opt/gopath"
@@ -63,7 +64,7 @@ then
 # Otherwise, build Golang from source
 else
    # Install Golang 1.6 binary as a bootstrap to compile the Golang GO_VER source
-   apt-get -y install golang-1.6
+   yum -y install golang-1.6
 
    cd /tmp
    wget --quiet --no-check-certificate https://storage.googleapis.com/golang/go${GO_VER}.src.tar.gz
@@ -72,7 +73,7 @@ else
    cd $GOROOT/src
    export GOROOT_BOOTSTRAP="/usr/lib/go-1.6"
    ./make.bash
-   apt-get -y remove golang-1.6
+   yum -y remove golang-1.6
 fi
 
 PATH=$GOROOT/bin:$GOPATH/bin:$PATH

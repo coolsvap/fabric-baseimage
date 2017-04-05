@@ -1,17 +1,19 @@
-DOCKER_NS ?= hyperledger
+DOCKER_NS ?= coolsvap
 BASENAME ?= $(DOCKER_NS)/fabric
 NAME ?= $(BASENAME)-baseimage
 VERSION ?= $(shell cat ./release)
 IS_RELEASE=false
+ARCH=x86_64
+BASE_OS=CentOS
 
 ARCH=$(shell uname -m)
-DOCKER_TAG ?= $(ARCH)-$(VERSION)
+DOCKER_TAG ?= $(BASE_OS)-$(ARCH)-$(VERSION)
 VAGRANTIMAGE=baseimage-v$(VERSION).box
 
-DOCKER_BASE_x86_64=ubuntu:xenial
-DOCKER_BASE_s390x=s390x/debian:jessie
-DOCKER_BASE_ppc64le=ppc64le/ubuntu:xenial
-DOCKER_BASE_armv7l=armv7/armhf-ubuntu
+DOCKER_BASE_x86_64=centos:7
+#DOCKER_BASE_s390x=s390x/debian:jessie
+#DOCKER_BASE_ppc64le=ppc64le/ubuntu:xenial
+#DOCKER_BASE_armv7l=armv7/armhf-ubuntu
 
 DOCKER_BASE=$(DOCKER_BASE_$(ARCH))
 
@@ -24,11 +26,11 @@ DUMMY = .$(DOCKER_TAG)
 
 all: vagrant docker
 
-build/docker/basejvm/$(DUMMY): build/docker/baseos/$(DUMMY)
-build/docker/baseimage/$(DUMMY): build/docker/basejvm/$(DUMMY)
+build/docker/$(BASE_OS)/basejvm/$(DUMMY): build/docker/$(BASE_OS)/baseos/$(DUMMY)
+build/docker/$(BASE_OS)/baseimage/$(DUMMY): build/docker/$(BASE_OS)/basejvm/$(DUMMY)
 
-build/docker/%/$(DUMMY):
-	$(eval TARGET = ${patsubst build/docker/%/$(DUMMY),%,${@}})
+build/docker/$(BASE_OS)/%/$(DUMMY):
+	$(eval TARGET = ${patsubst build/docker/$(BASE_OS)/%/$(DUMMY),%,${@}})
 	$(eval DOCKER_NAME = $(BASENAME)-$(TARGET))
 	@mkdir -p $(@D)
 	@echo "Building docker $(TARGET)"
@@ -43,12 +45,8 @@ build/docker/%/$(DUMMY):
 		.
 	@touch $@
 
-build/docker/%/.push: build/docker/%/$(DUMMY)
-	@docker login \
-		--email=$(DOCKER_HUB_EMAIL) \
-		--username=$(DOCKER_HUB_USERNAME) \
-		--password=$(DOCKER_HUB_PASSWORD)
-	@docker push $(BASENAME)-$(patsubst build/docker/%/.push,%,$@):$(DOCKER_TAG)
+build/docker/$(BASE_OS)/%/.push: build/docker/$(BASE_OS)/%/$(DUMMY)
+	@docker push $(BASENAME)-$(patsubst build/docker/$(BASE_OS)/%/.push,%,$@):$(DOCKER_TAG)
 
 # strips off the post-processors that try to upload artifacts to the cloud
 packer-local.json: packer.json
@@ -63,14 +61,17 @@ packer-local.json: packer.json
 baseimage-public.box: packer.json
 $(VAGRANTIMAGE): packer-local.json
 
-docker-local: $(patsubst %,build/docker/%/$(DUMMY),$(DOCKER_IMAGES))
+docker-local: $(patsubst %,build/docker/$(BASE_OS)/%/$(DUMMY),$(DOCKER_IMAGES))
 
-docker: $(patsubst %,build/docker/%/.push,$(DOCKER_IMAGES))
+docker: $(patsubst %,build/docker/$(BASE_OS)/%/.push,$(DOCKER_IMAGES))
 
 vagrant: baseimage-public.box Makefile
 
 vagrant-local: $(VAGRANTIMAGE) remove Makefile
 	vagrant box add -name $(NAME) $<
+
+docker-login:
+	@docker login --username=$(DOCKER_HUB_USERNAME) --password=$(DOCKER_HUB_PASSWORD)
 
 remove:
 	-vagrant box remove --box-version 0 $(NAME)
