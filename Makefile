@@ -46,9 +46,6 @@ build/docker/$(BASE_OS)/%/$(DUMMY):
 	@touch $@
 
 build/docker/$(BASE_OS)/%/.push: build/docker/$(BASE_OS)/%/$(DUMMY)
-	@docker login \
-		--username=$(DOCKER_HUB_USERNAME) \
-		--password=$(DOCKER_HUB_PASSWORD)
 	@docker push $(BASENAME)-$(patsubst build/docker/$(BASE_OS)/%/.push,%,$@):$(DOCKER_TAG)
 
 # strips off the post-processors that try to upload artifacts to the cloud
@@ -72,6 +69,9 @@ vagrant: baseimage-public.box Makefile
 
 vagrant-local: $(VAGRANTIMAGE) remove Makefile
 	vagrant box add -name $(NAME) $<
+
+docker-login:
+	@docker login --username=$(DOCKER_HUB_USERNAME) --password=$(DOCKER_HUB_PASSWORD)
 
 remove:
 	-vagrant box remove --box-version 0 $(NAME)
